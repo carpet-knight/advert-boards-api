@@ -2,5 +2,11 @@
   "name": "a_boards_api",
   "version": "1.0.0",
   "main": "server.js",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.1",
+    "xmldom": "^0.4.0",
+    "xpath": "^0.0.32"
+  }
 }
