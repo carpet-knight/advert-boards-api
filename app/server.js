@@ -10,12 +10,14 @@ const avitoRouter = require('./routes/avito');
 const commonErrorHandlers = require('./error_handlers/common');
 
 const app = express();
+
+// Remove X-Powered-By HTTP header
+app.set('x-powered-by', false);
+
 app.use('/api/avito', avitoRouter);
 
-app.get('/', (req, res) => {
-    res.send('Hello world!');
-});
-app.use(commonErrorHandlers);
+app.use(commonErrorHandlers.notFoundHandler);
+app.use(commonErrorHandlers.basicErrorHandler);
 
 app.listen(server.port, server.host, () => {
     console.log(`Running on http://${server.host}:${server.port}`);
