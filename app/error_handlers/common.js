@@ -10,16 +10,16 @@ function notAllowedHandler(req, res) {
     return res.status(405).json(responseBody.methodNotAllowed());
 }
 
-function emptyQueryHandler(err, req, res, next) {
-    if (err.name === errors.emptyQuery.name)
-        return res.status(400).json(responseBody.badRequest(err.message))
+function badRequestHandler(err, req, res, next) {
+    if (err.status === 400)
+        return res.status(400).json(responseBody.badRequest(err.message));
 
     next(err);
 }
 
-function invalidQueryParamsHandler(err, req, res, next) {
-    if (err.name === errors.invalidQueryParams.name)
-        return res.status(400).json(responseBody.badRequest(err.message));
+function serverErrorHandler(err, req, res, next) {
+    if (err.status === 500)
+        return res.status(500).json(responseBody.custom(500, 'Internal Server Error', err.message));
 
     next(err);
 }
@@ -32,7 +32,7 @@ function basicErrorHandler(err, req, res, next) {
 module.exports = {
     notFoundHandler,
     notAllowedHandler,
-    emptyQueryHandler,
-    invalidQueryParamsHandler,
+    badRequestHandler,
+    serverErrorHandler,
     basicErrorHandler
 }
