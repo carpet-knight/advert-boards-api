@@ -11,6 +11,8 @@ module.exports = {
                 error: (e) => { },  // suppress minor errors
                 fatalError: (e) => console.error(e)
             }
-        }
+        },
+        defaultLimit: 5,
+        defaultRegion: 'sankt-peterburg'
     }
 }

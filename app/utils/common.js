@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { DOMParser } = require('xmldom');
+const { stringify } = require('querystring');
 const { app } = require('../config/default');
 
 const parser = new DOMParser(app.parserSettings);
@@ -20,7 +21,12 @@ function formDocument(html) {
     return parser.parseFromString(html);
 }
 
+function formRequestUrl(path, params) {
+    return encodeURI(`${path}?${stringify(params)}`);
+}
+
 module.exports = {
     getContent,
-    formDocument
+    formDocument,
+    formRequestUrl
 }

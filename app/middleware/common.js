@@ -1,4 +1,8 @@
+const utils = require('../utils/common');
 const errors = require('../utils/errors');
+const regions = require('../utils/regions');
+const { app } = require('../config/default');
+const responseBody = require('../utils/responseBody');
 
 function validateParams(req, res, next) {
     const q = req.query.q;
@@ -36,12 +40,50 @@ function validateParams(req, res, next) {
         if (isNaN(limit) || limit <= 0)
             return next(errors.invalidQueryParams);
 
-        req.query.limit = limit;
+    } else {
+        limit = app.defaultLimit;
+    }
+
+    req.query.limit = limit;
+
+    let region = req.query.region;
+
+    if (region) {
+        if (!regions.includes(region))
+            return next(errors.invalidQueryParams);
+
+    } else {
+        region = app.defaultRegion;
+    }
+
+    req.query.region = region;
+
+    next();
+}
+
+async function fetchExternalData(req, res, next) {
+    const url = req.externalResourseUrl;
+
+    try {
+        const html = await utils.getContent(url);
+        const doc = utils.formDocument(html);
+        req.doc = doc;
+    } catch {
+        return next(errors.fetchError);
     }
 
     next();
 }
 
+function sendCollectedData(req, res) {
+    if (!res.data)
+        res.data = [];
+
+    res.json(responseBody.success(res.data));
+}
+
 module.exports = {
-    validateParams
+    validateParams,
+    fetchExternalData,
+    sendCollectedData
 }
