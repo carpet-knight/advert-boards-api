@@ -14,9 +14,13 @@ const app = express();
 // Remove X-Powered-By HTTP header
 app.set('x-powered-by', false);
 
+// Specify routes
 app.use('/api/avito', avitoRouter);
 
+// Specify application level error handlers
 app.use(commonErrorHandlers.notFoundHandler);
+app.use(commonErrorHandlers.badRequestHandler);
+app.use(commonErrorHandlers.serverErrorHandler);
 app.use(commonErrorHandlers.basicErrorHandler);
 
 app.listen(server.port, server.host, () => {

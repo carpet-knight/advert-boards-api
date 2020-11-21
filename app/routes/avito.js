@@ -1,18 +1,18 @@
 const { Router } = require('express');
-const { validateParams } = require('../middleware/common');
+const avitoMiddleware = require('../middleware/avito');
+const commonMiddleware = require('../middleware/common');
 const commonErrorHandlers = require('../error_handlers/common');
 
 const router = Router();
 
 router
     .get('/', [
-        validateParams,
-        (req, res) => res.send('Hello from Avito!')
+        commonMiddleware.validateParams,
+        avitoMiddleware.formExternalResourseUrl,
+        commonMiddleware.fetchExternalData,
+        avitoMiddleware.getProductsData,
+        commonMiddleware.sendCollectedData
     ])
-    .all('/', commonErrorHandlers.notAllowedHandler)
-    .use([
-        commonErrorHandlers.emptyQueryHandler,
-        commonErrorHandlers.invalidQueryParamsHandler
-    ]);
+    .all('/', commonErrorHandlers.notAllowedHandler);
 
 module.exports = router;
