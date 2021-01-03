@@ -1,36 +1,35 @@
 const xpath = require('xpath');
 const { formRequestUrl } = require('../utils/common');
-const errors = require('../utils/errors');
 
 /*========================= Const section =========================*/
 
 const BASE_URL = 'https://avito.ru';
 
-const PRODUCTS_XPATH = './/div[@data-item-id]';
-const PRODUCT_IMG_XPATH = 'string(.//img/@src)';
+const ADVERTS_XPATH = './/div[@data-item-id]';
+const ADVERT_IMG_XPATH = 'string(.//img/@src)';
 const SHOP_LINK_XPATH = './/div[@data-marker="item-line"]';
-const PRODUCT_LINK_XPATH = 'string(.//a[@itemProp="url"]/@href)';
+const ADVERT_LINK_XPATH = 'string(.//a[@itemProp="url"]/@href)';
 const DATE_XPATH = 'string(.//div[@data-marker="item-date"]/text())';
-const PRODUCT_TITLE_XPATH = 'string(.//span[@itemProp="name"]/text())';
-const PRODUCT_PRICE_XPATH = 'string(.//meta[@itemProp="price"]/@content)';
+const ADVERT_TITLE_XPATH = 'string(.//span[@itemProp="name"]/text())';
+const ADVERT_PRICE_XPATH = 'string(.//meta[@itemProp="price"]/@content)';
 const LOCATION_XPATH = 'string(.//div[contains(@class, "geo-georeferences")]/span/text())';
 
 /*========================= Helper functions =========================*/
 
-function isShop(product) {
-    const shopLinks = xpath.select(SHOP_LINK_XPATH, product);
+function isShop(ad) {
+    const shopLinks = xpath.select(SHOP_LINK_XPATH, ad);
 
     return shopLinks.length > 0;
 }
 
-function getProductInfo(product) {
+function getAdvertInfo(ad) {
     return {
-        name: xpath.select(PRODUCT_TITLE_XPATH, product),
-        price: xpath.select(PRODUCT_PRICE_XPATH, product),
-        location: xpath.select(LOCATION_XPATH, product),
-        date: xpath.select(DATE_XPATH, product),
-        img: xpath.select(PRODUCT_IMG_XPATH, product),
-        url: BASE_URL + xpath.select(PRODUCT_LINK_XPATH, product)
+        name: xpath.select(ADVERT_TITLE_XPATH, ad),
+        price: xpath.select(ADVERT_PRICE_XPATH, ad),
+        location: xpath.select(LOCATION_XPATH, ad),
+        date: xpath.select(DATE_XPATH, ad),
+        img: xpath.select(ADVERT_IMG_XPATH, ad),
+        url: BASE_URL + xpath.select(ADVERT_LINK_XPATH, ad)
     }
 }
 
@@ -55,18 +54,18 @@ function formExternalResourseUrl(req, res, next) {
     next();
 }
 
-function getProductsData(req, res, next) {
+function getAdvertsData(req, res, next) {
     const doc = req.doc;
     const limit = req.query.limit;
 
-    const products = xpath.select(PRODUCTS_XPATH, doc);
+    const ads = xpath.select(ADVERTS_XPATH, doc);
 
     let count = 0
     let data = [];
 
-    for (const product of products) {
-        if (!isShop(product)) {
-            data.push(getProductInfo(product));
+    for (const ad of ads) {
+        if (!isShop(ad)) {
+            data.push(getAdvertInfo(ad));
 
             count++;
             if (count === limit)
@@ -81,5 +80,5 @@ function getProductsData(req, res, next) {
 
 module.exports = {
     formExternalResourseUrl,
-    getProductsData
+    getAdvertsData
 }
