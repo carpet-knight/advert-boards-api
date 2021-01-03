@@ -6,30 +6,28 @@ const errors = require('../utils/errors');
 
 const BASE_URL = 'https://avito.ru';
 
-const PRODUCTS_DIV_CONTAINER_XPATH = './/div[@class="snippet-list"]';
-const PRODUCT_TITLE_XPATH = 'string(.//a[@class="snippet-link"]/@title)';
-const PRODUCT_LINK_XPATH = 'string(.//a[@class="snippet-link"]/@href)';
-const PRODUCT_PRICE_XPATH = 'string(.//meta[@itemprop="price"]/@content)';
-const PRODUCT_DESC_XPATH = 'string(.//meta[@itemprop="description"]/@content)';
+const PRODUCTS_XPATH = './/div[@data-item-id]';
 const PRODUCT_IMG_XPATH = 'string(.//img/@src)';
-const SHOP_LINK_XPATH = './/div[@class="data"]/p/a';
-const CITY_XPATH = 'string(.//meta[@itemprop="addressLocality"]/@content)';
-const DATE_XPATH = 'string(.//div[@class="snippet-date-info"]/@data-tooltip)';
+const SHOP_LINK_XPATH = './/div[@data-marker="item-line"]';
+const PRODUCT_LINK_XPATH = 'string(.//a[@itemProp="url"]/@href)';
+const DATE_XPATH = 'string(.//div[@data-marker="item-date"]/text())';
+const PRODUCT_TITLE_XPATH = 'string(.//span[@itemProp="name"]/text())';
+const PRODUCT_PRICE_XPATH = 'string(.//meta[@itemProp="price"]/@content)';
+const LOCATION_XPATH = 'string(.//div[contains(@class, "geo-georeferences")]/span/text())';
 
 /*========================= Helper functions =========================*/
 
 function isShop(product) {
-    const desc = xpath.select(PRODUCT_DESC_XPATH, product);
     const shopLinks = xpath.select(SHOP_LINK_XPATH, product);
 
-    return desc.length > 3 || shopLinks.length > 0;
+    return shopLinks.length > 0;
 }
 
 function getProductInfo(product) {
     return {
         name: xpath.select(PRODUCT_TITLE_XPATH, product),
         price: xpath.select(PRODUCT_PRICE_XPATH, product),
-        city: xpath.select(CITY_XPATH, product),
+        location: xpath.select(LOCATION_XPATH, product),
         date: xpath.select(DATE_XPATH, product),
         img: xpath.select(PRODUCT_IMG_XPATH, product),
         url: BASE_URL + xpath.select(PRODUCT_LINK_XPATH, product)
@@ -61,20 +59,13 @@ function getProductsData(req, res, next) {
     const doc = req.doc;
     const limit = req.query.limit;
 
-    let prodDivContainer = xpath.select(PRODUCTS_DIV_CONTAINER_XPATH, doc);
-    if (prodDivContainer.length === 0)
-        return next(errors.parseError);
-
-    prodDivContainer = prodDivContainer[0];
-    const products = prodDivContainer.childNodes;
+    const products = xpath.select(PRODUCTS_XPATH, doc);
 
     let count = 0
     let data = [];
 
-    for (let i = 0; i < products.length; ++i) {
-        const product = products[i];
-
-        if (product.nodeType === doc.ELEMENT_NODE && product.hasAttribute('id') && !isShop(product)) {
+    for (const product of products) {
+        if (!isShop(product)) {
             data.push(getProductInfo(product));
 
             count++;
