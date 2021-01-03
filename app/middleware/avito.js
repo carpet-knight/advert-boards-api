@@ -1,14 +1,15 @@
 const xpath = require('xpath');
+const errors = require('../utils/errors');
 const { formRequestUrl } = require('../utils/common');
 
 /*========================= Const section =========================*/
 
 const BASE_URL = 'https://avito.ru';
 
-const ADVERTS_XPATH = './/div[@data-item-id]';
 const ADVERT_LINK_XPATH = 'string(.//a[@itemProp="url"]/@href)';
 const DATE_XPATH = 'string(.//div[@data-marker="item-date"]/text())';
 const ADVERT_TITLE_XPATH = 'string(.//span[@itemProp="name"]/text())';
+const ADVERTS_CONTAINER_XPATH = './/div[@data-marker="catalog-serp"]';
 const ADVERT_PRICE_XPATH = 'string(.//meta[@itemProp="price"]/@content)';
 const ADVERT_IMG_XPATH = 'string(.//li[contains(@class, "photo-slider")]/@data-marker)';
 const LOCATION_XPATH = 'string(.//div[contains(@class, "geo-georeferences")]/span/text())';
@@ -61,17 +62,28 @@ function getAdvertsData(req, res, next) {
     const doc = req.doc;
     const limit = req.query.limit;
 
-    const ads = xpath.select(ADVERTS_XPATH, doc);
+    const adsContainer = xpath.select(ADVERTS_CONTAINER_XPATH, doc, true);
 
+    if (!adsContainer) {
+        return next(errors.parseError);
+    }
+
+    const ads = adsContainer.childNodes;
+
+    let ad;
     let count = 0
     let data = [];
 
-    for (const ad of ads) {
-        data.push(getAdvertInfo(ad));
+    for (let i = 0; i < ads.length; ++i) {
+        ad = ads[i];
 
-        count++;
-        if (count === limit)
-            break;
+        if (ad.hasAttribute('data-item-id')) {
+            data.push(getAdvertInfo(ad));
+
+            count++;
+            if (count === limit)
+                break;
+        }
     }
 
     res.data = data;
