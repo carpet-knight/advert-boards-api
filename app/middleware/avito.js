@@ -6,14 +6,24 @@ const { formRequestUrl } = require('../utils/common');
 const BASE_URL = 'https://avito.ru';
 
 const ADVERTS_XPATH = './/div[@data-item-id]';
-const ADVERT_IMG_XPATH = 'string(.//img/@src)';
 const ADVERT_LINK_XPATH = 'string(.//a[@itemProp="url"]/@href)';
 const DATE_XPATH = 'string(.//div[@data-marker="item-date"]/text())';
 const ADVERT_TITLE_XPATH = 'string(.//span[@itemProp="name"]/text())';
 const ADVERT_PRICE_XPATH = 'string(.//meta[@itemProp="price"]/@content)';
+const ADVERT_IMG_XPATH = 'string(.//li[contains(@class, "photo-slider")]/@data-marker)';
 const LOCATION_XPATH = 'string(.//div[contains(@class, "geo-georeferences")]/span/text())';
 
 /*========================= Helper functions =========================*/
+
+function getAdvertImage(ad) {
+    const dataMarkerString = xpath.select(ADVERT_IMG_XPATH, ad);
+
+    // searching for url
+    const index = dataMarkerString.indexOf('http');
+
+    // extracting url if found
+    return (index !== -1) ? dataMarkerString.slice(index) : '';
+}
 
 function getAdvertInfo(ad) {
     return {
@@ -21,7 +31,7 @@ function getAdvertInfo(ad) {
         price: xpath.select(ADVERT_PRICE_XPATH, ad),
         location: xpath.select(LOCATION_XPATH, ad),
         date: xpath.select(DATE_XPATH, ad),
-        img: xpath.select(ADVERT_IMG_XPATH, ad),
+        img: getAdvertImage(ad),
         url: BASE_URL + xpath.select(ADVERT_LINK_XPATH, ad)
     }
 }
