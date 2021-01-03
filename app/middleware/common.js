@@ -62,14 +62,19 @@ function validateParams(req, res, next) {
 }
 
 async function fetchExternalData(req, res, next) {
-    const url = req.externalResourseUrl;
+    let html, doc;
 
     try {
-        const html = await utils.getContent(url);
-        const doc = utils.formDocument(html);
-        req.doc = doc;
+        html = await utils.getContent(req.externalResourseUrl);
     } catch {
         return next(errors.fetchError);
+    }
+
+    try {
+        doc = utils.formDocument(html);
+        req.doc = doc;
+    } catch {
+        return next(errors.parseError);
     }
 
     next();
