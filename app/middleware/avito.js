@@ -7,7 +7,6 @@ const BASE_URL = 'https://avito.ru';
 
 const ADVERTS_XPATH = './/div[@data-item-id]';
 const ADVERT_IMG_XPATH = 'string(.//img/@src)';
-const SHOP_LINK_XPATH = './/div[@data-marker="item-line"]';
 const ADVERT_LINK_XPATH = 'string(.//a[@itemProp="url"]/@href)';
 const DATE_XPATH = 'string(.//div[@data-marker="item-date"]/text())';
 const ADVERT_TITLE_XPATH = 'string(.//span[@itemProp="name"]/text())';
@@ -15,12 +14,6 @@ const ADVERT_PRICE_XPATH = 'string(.//meta[@itemProp="price"]/@content)';
 const LOCATION_XPATH = 'string(.//div[contains(@class, "geo-georeferences")]/span/text())';
 
 /*========================= Helper functions =========================*/
-
-function isShop(ad) {
-    const shopLinks = xpath.select(SHOP_LINK_XPATH, ad);
-
-    return shopLinks.length > 0;
-}
 
 function getAdvertInfo(ad) {
     return {
@@ -64,13 +57,11 @@ function getAdvertsData(req, res, next) {
     let data = [];
 
     for (const ad of ads) {
-        if (!isShop(ad)) {
-            data.push(getAdvertInfo(ad));
+        data.push(getAdvertInfo(ad));
 
-            count++;
-            if (count === limit)
-                break;
-        }
+        count++;
+        if (count === limit)
+            break;
     }
 
     res.data = data;
