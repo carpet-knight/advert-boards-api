@@ -1,38 +1,39 @@
 const xpath = require('xpath');
-const { formRequestUrl } = require('../utils/common');
 const errors = require('../utils/errors');
+const { formRequestUrl } = require('../utils/common');
 
 /*========================= Const section =========================*/
 
 const BASE_URL = 'https://avito.ru';
 
-const PRODUCTS_DIV_CONTAINER_XPATH = './/div[@class="snippet-list"]';
-const PRODUCT_TITLE_XPATH = 'string(.//a[@class="snippet-link"]/@title)';
-const PRODUCT_LINK_XPATH = 'string(.//a[@class="snippet-link"]/@href)';
-const PRODUCT_PRICE_XPATH = 'string(.//meta[@itemprop="price"]/@content)';
-const PRODUCT_DESC_XPATH = 'string(.//meta[@itemprop="description"]/@content)';
-const PRODUCT_IMG_XPATH = 'string(.//img/@src)';
-const SHOP_LINK_XPATH = './/div[@class="data"]/p/a';
-const CITY_XPATH = 'string(.//meta[@itemprop="addressLocality"]/@content)';
-const DATE_XPATH = 'string(.//div[@class="snippet-date-info"]/@data-tooltip)';
+const ADVERT_LINK_XPATH = 'string(.//a[@itemProp="url"]/@href)';
+const DATE_XPATH = 'string(.//div[@data-marker="item-date"]/text())';
+const ADVERT_TITLE_XPATH = 'string(.//span[@itemProp="name"]/text())';
+const ADVERTS_CONTAINER_XPATH = './/div[@data-marker="catalog-serp"]';
+const ADVERT_PRICE_XPATH = 'string(.//meta[@itemProp="price"]/@content)';
+const ADVERT_IMG_XPATH = 'string(.//li[contains(@class, "photo-slider")]/@data-marker)';
+const LOCATION_XPATH = 'string(.//div[contains(@class, "geo-georeferences")]/span/text())';
 
 /*========================= Helper functions =========================*/
 
-function isShop(product) {
-    const desc = xpath.select(PRODUCT_DESC_XPATH, product);
-    const shopLinks = xpath.select(SHOP_LINK_XPATH, product);
+function getAdvertImage(ad) {
+    const dataMarkerString = xpath.select(ADVERT_IMG_XPATH, ad);
 
-    return desc.length > 3 || shopLinks.length > 0;
+    // searching for url
+    const index = dataMarkerString.indexOf('http');
+
+    // extracting url if found
+    return (index !== -1) ? dataMarkerString.slice(index) : '';
 }
 
-function getProductInfo(product) {
+function getAdvertInfo(ad) {
     return {
-        name: xpath.select(PRODUCT_TITLE_XPATH, product),
-        price: xpath.select(PRODUCT_PRICE_XPATH, product),
-        city: xpath.select(CITY_XPATH, product),
-        date: xpath.select(DATE_XPATH, product),
-        img: xpath.select(PRODUCT_IMG_XPATH, product),
-        url: BASE_URL + xpath.select(PRODUCT_LINK_XPATH, product)
+        name: xpath.select(ADVERT_TITLE_XPATH, ad),
+        price: xpath.select(ADVERT_PRICE_XPATH, ad),
+        location: xpath.select(LOCATION_XPATH, ad),
+        date: xpath.select(DATE_XPATH, ad),
+        img: getAdvertImage(ad),
+        url: BASE_URL + xpath.select(ADVERT_LINK_XPATH, ad)
     }
 }
 
@@ -57,25 +58,27 @@ function formExternalResourseUrl(req, res, next) {
     next();
 }
 
-function getProductsData(req, res, next) {
+function getAdvertsData(req, res, next) {
     const doc = req.doc;
     const limit = req.query.limit;
 
-    let prodDivContainer = xpath.select(PRODUCTS_DIV_CONTAINER_XPATH, doc);
-    if (prodDivContainer.length === 0)
+    const adsContainer = xpath.select(ADVERTS_CONTAINER_XPATH, doc, true);
+
+    if (!adsContainer) {
         return next(errors.parseError);
+    }
 
-    prodDivContainer = prodDivContainer[0];
-    const products = prodDivContainer.childNodes;
+    const ads = adsContainer.childNodes;
 
+    let ad;
     let count = 0
     let data = [];
 
-    for (let i = 0; i < products.length; ++i) {
-        const product = products[i];
+    for (let i = 0; i < ads.length; ++i) {
+        ad = ads[i];
 
-        if (product.nodeType === doc.ELEMENT_NODE && product.hasAttribute('id') && !isShop(product)) {
-            data.push(getProductInfo(product));
+        if (ad.hasAttribute('data-item-id')) {
+            data.push(getAdvertInfo(ad));
 
             count++;
             if (count === limit)
@@ -90,5 +93,5 @@ function getProductsData(req, res, next) {
 
 module.exports = {
     formExternalResourseUrl,
-    getProductsData
+    getAdvertsData
 }

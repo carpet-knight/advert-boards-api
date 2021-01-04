@@ -10,7 +10,7 @@ router
         commonMiddleware.validateParams,
         avitoMiddleware.formExternalResourseUrl,
         commonMiddleware.fetchExternalData,
-        avitoMiddleware.getProductsData,
+        avitoMiddleware.getAdvertsData,
         commonMiddleware.sendCollectedData
     ])
     .all('/', commonErrorHandlers.notAllowedHandler);
